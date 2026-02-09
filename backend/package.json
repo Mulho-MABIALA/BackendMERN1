@@ -2,10 +2,10 @@
   "name": "ecohub-backend",
   "version": "1.0.0",
   "description": "ECOHUB - Backend API de signalement citoyen",
-  "main": "serveur.js",
+  "main": "serve.js",
   "scripts": {
-    "start": "node serveur.js",
-    "dev": "nodemon serveur.js"
+    "start": "node serve.js",
+    "dev": "nodemon serve.js"
   },
   "keywords": [],
   "author": "",

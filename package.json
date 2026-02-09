@@ -1,11 +1,28 @@
 {
-  "name": "ecohub",
+  "name": "ecohub-backend",
   "version": "1.0.0",
-  "description": "Plateforme Intelligente de Signalement Citoyen",
+  "description": "ECOHUB - Backend API de signalement citoyen",
+  "main": "server.js",
   "scripts": {
-    "dev:front": "cd ecohub && npm run dev",
-    "dev:back": "cd backend && npm run dev",
-    "dev:all": "start /b cmd /c \"cd backend && npm run dev\" & start /b cmd /c \"cd ecohub && npm run dev\"",
-    "seed": "cd backend && node config/seed.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
+    "express": "^4.22.1",
+    "express-validator": "^7.3.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.1.6",
+    "multer": "^2.0.2",
+    "nodemailer": "^8.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
   }
 }

@@ -1,0 +1,11 @@
+{
+  "name": "ecohub",
+  "version": "1.0.0",
+  "description": "Plateforme Intelligente de Signalement Citoyen",
+  "scripts": {
+    "dev:front": "cd ecohub && npm run dev",
+    "dev:back": "cd backend && npm run dev",
+    "dev:all": "start /b cmd /c \"cd backend && npm run dev\" & start /b cmd /c \"cd ecohub && npm run dev\"",
+    "seed": "cd backend && node config/seed.js"
+  }
+}

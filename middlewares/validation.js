@@ -33,7 +33,9 @@ const reglesSignalement = [
   body('titre').trim().notEmpty().withMessage('Le titre est obligatoire').isLength({ max: 200 }).withMessage('Max 200 caractères'),
   body('description').trim().notEmpty().withMessage('La description est obligatoire').isLength({ min: 20 }).withMessage('Min 20 caractères'),
   body('categorie').isIn(['routes', 'eclairage', 'dechets', 'eau', 'securite', 'inondation', 'autre']).withMessage('Catégorie invalide'),
-  body('localisation.ville').trim().notEmpty().withMessage('La ville est obligatoire')
+  // localisation.ville fonctionne en JSON, mais en FormData localisation est un string JSON
+  // On valide que localisation existe (le contrôleur parse le string et vérifie la ville)
+  body('localisation').notEmpty().withMessage('La localisation est obligatoire')
 ];
 
 // ===== Règles de validation : Commentaire =====

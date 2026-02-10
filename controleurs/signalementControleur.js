@@ -30,6 +30,10 @@ const creerSignalement = asyncHandler(async (req, res) => {
     try { localisation = JSON.parse(localisation); } catch (e) { localisation = {}; }
   }
 
+  if (!localisation?.ville) {
+    return envoyerReponse(res, 400, false, 'La ville est obligatoire.');
+  }
+
   // Calculer la priorité automatiquement
   const { score, priorite } = calculerPriorite({
     categorie,
@@ -102,12 +106,9 @@ const obtenirSignalements = asyncHandler(async (req, res) => {
     ];
   }
 
-  // Si agent, montrer ses signalements assignés + les non assignés
+  // Si agent, montrer uniquement ses signalements assignés
   if (req.utilisateur.role === 'agent') {
-    filtre.$or = [
-      { assigneA: req.utilisateur._id },
-      { assigneA: null }
-    ];
+    filtre.assigneA = req.utilisateur._id;
   }
 
   const total = await Signalement.countDocuments(filtre);
@@ -171,6 +172,13 @@ const changerStatut = asyncHandler(async (req, res) => {
   const signalement = await Signalement.findById(req.params.id);
   if (!signalement) {
     return envoyerReponse(res, 404, false, 'Signalement introuvable.');
+  }
+
+  // Si agent, vérifier qu'il est bien assigné à ce signalement
+  if (req.utilisateur.role === 'agent') {
+    if (!signalement.assigneA || String(signalement.assigneA) !== String(req.utilisateur._id)) {
+      return envoyerReponse(res, 403, false, 'Ce signalement ne vous est pas assigné.');
+    }
   }
 
   const ancienStatut = signalement.statut;
@@ -343,6 +351,17 @@ const signalementsProximite = asyncHandler(async (req, res) => {
 // @acces   Privé (agent)
 const ajouterResolution = asyncHandler(async (req, res) => {
   const { description, cout, ressourcesUtilisees } = req.body;
+
+  // Vérifier que l'agent est bien assigné à ce signalement
+  const signalementExistant = await Signalement.findById(req.params.id);
+  if (!signalementExistant) {
+    return envoyerReponse(res, 404, false, 'Signalement introuvable.');
+  }
+  if (req.utilisateur.role === 'agent') {
+    if (!signalementExistant.assigneA || String(signalementExistant.assigneA) !== String(req.utilisateur._id)) {
+      return envoyerReponse(res, 403, false, 'Ce signalement ne vous est pas assigné.');
+    }
+  }
 
   const photosResolution = (req.files || []).map((f, index) => ({
     url: `/uploads/${f.filename}`,

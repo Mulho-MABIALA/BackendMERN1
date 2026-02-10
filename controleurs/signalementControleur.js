@@ -4,12 +4,31 @@ const Notification = require('../modeles/Notification');
 const { asyncHandler, envoyerReponse, paginer } = require('../utilitaires/helpers');
 const { calculerPriorite } = require('../utilitaires/calculPriorite');
 const { tenterRegroupement } = require('../utilitaires/regroupement');
+const { envoyerEmail, templateChangementStatut, templateAssignation } = require('../utilitaires/email');
+
+// Masquer l'identité pour les signalements anonymes
+function masquerAnonyme(signalements, utilisateur) {
+  const estAutorise = ['admin', 'agent'].includes(utilisateur.role);
+  return signalements.map(s => {
+    const obj = s.toObject ? s.toObject() : { ...s };
+    if (obj.estAnonyme && !estAutorise && String(obj.soumisePar?._id || obj.soumisePar) !== String(utilisateur._id)) {
+      obj.soumisePar = null;
+    }
+    return obj;
+  });
+}
 
 // @desc    Créer un signalement
 // @route   POST /api/signalements
 // @acces   Privé (citoyen, agent, admin)
 const creerSignalement = asyncHandler(async (req, res) => {
-  const { titre, description, categorie, sousCategorie, localisation, estAnonyme } = req.body;
+  const { titre, description, categorie, sousCategorie, estAnonyme } = req.body;
+
+  // Parser localisation si envoyé en string (FormData multipart)
+  let localisation = req.body.localisation;
+  if (typeof localisation === 'string') {
+    try { localisation = JSON.parse(localisation); } catch (e) { localisation = {}; }
+  }
 
   // Calculer la priorité automatiquement
   const { score, priorite } = calculerPriorite({
@@ -105,10 +124,12 @@ const obtenirSignalements = asyncHandler(async (req, res) => {
   const { requete: requetePaginee, pagination } = paginer(requete, page, limite);
   const signalements = await requetePaginee;
 
+  const resultat = masquerAnonyme(signalements, req.utilisateur);
+
   envoyerReponse(res, 200, true, 'Signalements récupérés.', {
     total,
     pagination,
-    signalements
+    signalements: resultat
   });
 });
 
@@ -125,7 +146,9 @@ const obtenirSignalement = asyncHandler(async (req, res) => {
     return envoyerReponse(res, 404, false, 'Signalement introuvable.');
   }
 
-  envoyerReponse(res, 200, true, 'Signalement récupéré.', { signalement });
+  const [resultat] = masquerAnonyme([signalement], req.utilisateur);
+
+  envoyerReponse(res, 200, true, 'Signalement récupéré.', { signalement: resultat });
 });
 
 // @desc    Mes signalements (citoyen)
@@ -190,6 +213,16 @@ const changerStatut = asyncHandler(async (req, res) => {
     signalementLie: signalement._id
   });
 
+  // Envoyer email au citoyen
+  const citoyen = await Utilisateur.findById(signalement.soumisePar);
+  if (citoyen?.email) {
+    envoyerEmail({
+      destinataire: citoyen.email,
+      sujet: `EcoHub - Mise a jour: ${signalement.titre}`,
+      html: templateChangementStatut(citoyen.prenom, signalement.titre, ancienStatut, statut)
+    });
+  }
+
   const signalementMisAJour = await Signalement.findById(req.params.id)
     .populate('soumisePar', 'prenom nom')
     .populate('assigneA', 'prenom nom');
@@ -238,6 +271,15 @@ const assignerSignalement = asyncHandler(async (req, res) => {
     type: 'signalement_assigne',
     signalementLie: signalement._id
   });
+
+  // Envoyer email à l'agent
+  if (agent.email) {
+    envoyerEmail({
+      destinataire: agent.email,
+      sujet: `EcoHub - Nouveau signalement assigne: ${signalement.titre}`,
+      html: templateAssignation(agent.prenom, signalement.titre)
+    });
+  }
 
   envoyerReponse(res, 200, true, 'Signalement assigné.', { signalement });
 });
@@ -291,7 +333,9 @@ const signalementsProximite = asyncHandler(async (req, res) => {
     statut: { $in: ['recu', 'en_cours'] }
   }).populate('soumisePar', 'prenom nom');
 
-  envoyerReponse(res, 200, true, `${signalements.length} signalements trouvés à proximité.`, { signalements });
+  const resultat = masquerAnonyme(signalements, req.utilisateur);
+
+  envoyerReponse(res, 200, true, `${resultat.length} signalements trouvés à proximité.`, { signalements: resultat });
 });
 
 // @desc    Ajouter photos de résolution
@@ -300,10 +344,10 @@ const signalementsProximite = asyncHandler(async (req, res) => {
 const ajouterResolution = asyncHandler(async (req, res) => {
   const { description, cout, ressourcesUtilisees } = req.body;
 
-  const photosResolution = (req.files || []).map(f => ({
+  const photosResolution = (req.files || []).map((f, index) => ({
     url: `/uploads/${f.filename}`,
-    legende: req.body.legende || '',
-    estPhotoAvant: false
+    legende: req.body[`legende_${index}`] || req.body.legende || '',
+    estPhotoAvant: req.body[`estPhotoAvant_${index}`] === 'true'
   }));
 
   const signalement = await Signalement.findByIdAndUpdate(

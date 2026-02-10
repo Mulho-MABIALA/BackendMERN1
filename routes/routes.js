@@ -9,5 +9,6 @@ routeur.use('/notifications', require('./notifications'));
 routeur.use('/statistiques', require('./statistiques'));
 routeur.use('/configuration', require('./configuration'));
 routeur.use('/commentaires', require('./commentaires'));
+routeur.use('/exports', require('./exports'));
 
 module.exports = routeur;

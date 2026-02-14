@@ -129,8 +129,8 @@ const proposerPrix = asyncHandler(async (req, res) => {
       utilisateur: vente.citoyen,
       type: 'vente',
       titre: 'Prix proposé pour votre vente',
-      contenu: `Un prix de ${vente.prixTotal} FCFA (${prixParKg} FCFA/kg) a été proposé pour vos ${vente.poidsKg} kg de ${vente.typeDechet}.`,
-      lien: `/citizen/ventes`
+      message: `Un prix de ${vente.prixTotal} FCFA (${prixParKg} FCFA/kg) a été proposé pour vos ${vente.poidsKg} kg de ${vente.typeDechet}.`,
+      lienAction: `/citizen/ventes`
     });
   } catch (e) {
     console.error('Erreur notification:', e.message);
@@ -191,8 +191,8 @@ const completerVente = asyncHandler(async (req, res) => {
       utilisateur: vente.citoyen,
       type: 'vente',
       titre: 'Vente complétée !',
-      contenu: `Votre vente de ${vente.poidsKg} kg de ${vente.typeDechet} a été complétée. Montant : ${vente.prixTotal} FCFA.`,
-      lien: `/citizen/ventes`
+      message: `Votre vente de ${vente.poidsKg} kg de ${vente.typeDechet} a été complétée. Montant : ${vente.prixTotal} FCFA.`,
+      lienAction: `/citizen/ventes`
     });
   } catch (e) {
     console.error('Erreur notification:', e.message);

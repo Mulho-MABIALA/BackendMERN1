@@ -28,7 +28,8 @@ const schemaNotification = new mongoose.Schema({
       'priorite_augmentee',
       'signalement_resolu',
       'annonce',
-      'rappel'
+      'rappel',
+      'vente'
     ]
   },
 

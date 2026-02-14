@@ -75,6 +75,13 @@ const schemaSignalement = new mongoose.Schema({
     estVerifiee: { type: Boolean, default: false }
   }],
 
+  // Audio vocal
+  audio: {
+    url: String,
+    duree: Number, // en secondes
+    dateUpload: { type: Date }
+  },
+
   // Métadonnées
   estAnonyme: { type: Boolean, default: false },
   aSignalementsMultiples: { type: Boolean, default: false },

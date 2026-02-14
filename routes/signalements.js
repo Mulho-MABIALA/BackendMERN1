@@ -25,7 +25,7 @@ routeur.use(proteger);
 
 // Routes citoyen
 routeur.get('/mes-signalements', mesSignalements);
-routeur.post('/', upload.array('photos', 5), ...reglesSignalement, gererValidation, creerSignalement);
+routeur.post('/', upload.fields([{ name: 'photos', maxCount: 5 }, { name: 'audio', maxCount: 1 }]), ...reglesSignalement, gererValidation, creerSignalement);
 routeur.put('/:id/voter', validerObjectId, voterSignalement);
 
 // Routes de consultation

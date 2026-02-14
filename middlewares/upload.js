@@ -12,17 +12,31 @@ const stockage = multer.diskStorage({
   }
 });
 
-// Filtre : accepter uniquement les images
+// Filtre : accepter images et audio
 const filtrerFichier = (req, fichier, cb) => {
-  const typesAutorises = /jpeg|jpg|png|webp/;
-  const extensionValide = typesAutorises.test(path.extname(fichier.originalname).toLowerCase());
-  const mimeValide = typesAutorises.test(fichier.mimetype);
+  const typesImages = /jpeg|jpg|png|webp/;
+  const typesAudio = /webm|mp3|wav|ogg|mpeg|mp4/;
 
-  if (extensionValide && mimeValide) {
-    cb(null, true);
-  } else {
-    cb(new Error('Seules les images (JPEG, PNG, WEBP) sont autorisées.'), false);
+  const ext = path.extname(fichier.originalname).toLowerCase();
+  const mime = fichier.mimetype;
+
+  // Photos
+  if (fichier.fieldname === 'photos') {
+    if (typesImages.test(ext) && typesImages.test(mime)) {
+      return cb(null, true);
+    }
+    return cb(new Error('Seules les images (JPEG, PNG, WEBP) sont autorisées.'), false);
   }
+
+  // Audio
+  if (fichier.fieldname === 'audio') {
+    if (typesAudio.test(ext) || typesAudio.test(mime)) {
+      return cb(null, true);
+    }
+    return cb(new Error('Seuls les fichiers audio (WEBM, MP3, WAV, OGG) sont autorisés.'), false);
+  }
+
+  cb(null, true);
 };
 
 const upload = multer({

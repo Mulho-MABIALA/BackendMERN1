@@ -70,12 +70,26 @@ const creerSignalement = asyncHandler(async (req, res) => {
   });
 
   // Gérer les photos uploadées
-  if (req.files && req.files.length > 0) {
-    signalement.photos = req.files.map(f => ({
+  const photosUpload = req.files?.photos;
+  if (photosUpload && photosUpload.length > 0) {
+    signalement.photos = photosUpload.map(f => ({
       url: `/uploads/${f.filename}`,
       miniatureUrl: `/uploads/${f.filename}`,
       dateUpload: new Date()
     }));
+  }
+
+  // Gérer l'audio vocal uploadé
+  const audioUpload = req.files?.audio;
+  if (audioUpload && audioUpload.length > 0) {
+    signalement.audio = {
+      url: `/uploads/${audioUpload[0].filename}`,
+      duree: parseFloat(req.body.audioDuree) || 0,
+      dateUpload: new Date()
+    };
+  }
+
+  if (photosUpload?.length > 0 || audioUpload?.length > 0) {
     await signalement.save();
   }
 

@@ -10,5 +10,6 @@ routeur.use('/statistiques', require('./statistiques'));
 routeur.use('/configuration', require('./configuration'));
 routeur.use('/commentaires', require('./commentaires'));
 routeur.use('/exports', require('./exports'));
+routeur.use('/ventes-dechets', require('./ventes-dechets'));
 
 module.exports = routeur;

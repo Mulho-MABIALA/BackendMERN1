@@ -42,7 +42,8 @@ app.get('/api', (req, res) => {
       notifications: '/api/notifications',
       statistiques: '/api/statistiques',
       configuration: '/api/configuration',
-      commentaires: '/api/commentaires'
+      commentaires: '/api/commentaires',
+      ventesDechets: '/api/ventes-dechets'
     }
   });
 });

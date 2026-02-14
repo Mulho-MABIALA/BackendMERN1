@@ -99,6 +99,7 @@ const schemaSignalement = new mongoose.Schema({
   },
   assigneA: { type: mongoose.Schema.Types.ObjectId, ref: 'Utilisateur' },
   assigneLe: Date,
+  delaiTraitement: Date, // Date limite fixée par l'admin
 
   // Interactions citoyennes
   votes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Utilisateur' }],

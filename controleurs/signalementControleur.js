@@ -272,7 +272,7 @@ const changerStatut = asyncHandler(async (req, res) => {
 // @route   PUT /api/signalements/:id/assigner
 // @acces   Privé (admin)
 const assignerSignalement = asyncHandler(async (req, res) => {
-  const { agentId } = req.body;
+  const { agentId, delaiTraitement } = req.body;
 
   // Vérifier que l'agent existe et a le bon rôle
   const agent = await Utilisateur.findById(agentId);
@@ -280,17 +280,28 @@ const assignerSignalement = asyncHandler(async (req, res) => {
     return envoyerReponse(res, 400, false, 'Agent invalide.');
   }
 
+  // Vérifier que le délai est fourni et valide
+  if (!delaiTraitement) {
+    return envoyerReponse(res, 400, false, 'Le délai de traitement est obligatoire.');
+  }
+
+  const dateDelai = new Date(delaiTraitement);
+  if (dateDelai <= new Date()) {
+    return envoyerReponse(res, 400, false, 'Le délai doit être une date future.');
+  }
+
   const signalement = await Signalement.findByIdAndUpdate(
     req.params.id,
     {
       assigneA: agentId,
       assigneLe: new Date(),
+      delaiTraitement: dateDelai,
       statut: 'en_cours',
       $push: {
         historiqueStatuts: {
           statut: 'en_cours',
           modifiePar: req.utilisateur._id,
-          commentaire: `Assigné à ${agent.prenom} ${agent.nom}`
+          commentaire: `Assigné à ${agent.prenom} ${agent.nom} — Délai : ${dateDelai.toLocaleDateString('fr-FR')}`
         }
       }
     },
@@ -305,7 +316,7 @@ const assignerSignalement = asyncHandler(async (req, res) => {
   await Notification.create({
     utilisateur: agentId,
     titre: 'Nouveau signalement assigné',
-    message: `Le signalement "${signalement.titre}" vous a été assigné.`,
+    message: `Le signalement "${signalement.titre}" vous a été assigné. Délai : ${dateDelai.toLocaleDateString('fr-FR')}.`,
     type: 'signalement_assigne',
     signalementLie: signalement._id
   });

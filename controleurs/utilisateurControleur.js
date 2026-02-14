@@ -1,4 +1,5 @@
 const Utilisateur = require('../modeles/Utilisateur');
+const Signalement = require('../modeles/Signalement');
 const { asyncHandler, envoyerReponse, paginer } = require('../utilitaires/helpers');
 
 // @desc    Obtenir tous les utilisateurs
@@ -113,12 +114,28 @@ const changerStatutUtilisateur = asyncHandler(async (req, res) => {
   );
 });
 
-// @desc    Obtenir tous les agents
+// @desc    Obtenir tous les agents avec leur charge de travail
 // @route   GET /api/utilisateurs/agents
 // @acces   Privé (admin)
 const obtenirAgents = asyncHandler(async (req, res) => {
   const agents = await Utilisateur.find({ role: 'agent' }).sort('nom');
-  envoyerReponse(res, 200, true, 'Agents récupérés.', { agents });
+
+  // Compter les signalements actifs (en_cours) par agent
+  const chargesTravail = await Signalement.aggregate([
+    { $match: { assigneA: { $in: agents.map(a => a._id) }, statut: 'en_cours' } },
+    { $group: { _id: '$assigneA', signalementsActifs: { $sum: 1 } } }
+  ]);
+
+  const chargeMap = {};
+  chargesTravail.forEach(c => { chargeMap[c._id.toString()] = c.signalementsActifs; });
+
+  const agentsAvecCharge = agents.map(a => {
+    const obj = a.toObject();
+    obj.signalementsActifs = chargeMap[a._id.toString()] || 0;
+    return obj;
+  });
+
+  envoyerReponse(res, 200, true, 'Agents récupérés.', { agents: agentsAvecCharge });
 });
 
 module.exports = {

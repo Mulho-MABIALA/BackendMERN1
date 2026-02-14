@@ -12,14 +12,14 @@ const PRIX_PAR_DEFAUT = {
 // @route   POST /api/ventes-dechets
 // @acces   Privé (citoyen)
 const creerVente = asyncHandler(async (req, res) => {
-  const { typeDechet, poidsKg, description, localisation } = req.body;
+  const { typeDechet, poidsKg, description } = req.body;
 
   if (!typeDechet || !poidsKg) {
     return envoyerReponse(res, 400, false, 'Le type de déchet et le poids sont obligatoires.');
   }
 
-  // Parser localisation si envoyé en string
-  let loc = localisation;
+  // Parser localisation si envoyé en string (FormData multipart)
+  let loc = req.body.localisation;
   if (typeof loc === 'string') {
     try { loc = JSON.parse(loc); } catch (e) { loc = {}; }
   }
@@ -36,6 +36,15 @@ const creerVente = asyncHandler(async (req, res) => {
       commentaire: 'Proposition de vente créée'
     }]
   });
+
+  // Gérer les photos uploadées
+  if (req.files && req.files.length > 0) {
+    vente.photos = req.files.map(f => ({
+      url: `/uploads/${f.filename}`,
+      dateUpload: new Date()
+    }));
+    await vente.save();
+  }
 
   envoyerReponse(res, 201, true, 'Proposition de vente créée avec succès.', { vente });
 });

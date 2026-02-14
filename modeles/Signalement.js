@@ -9,14 +9,13 @@ const schemaSignalement = new mongoose.Schema({
   },
   titre: {
     type: String,
-    required: [true, 'Le titre est obligatoire'],
     trim: true,
+    default: 'Signalement vocal',
     maxlength: [200, 'Le titre ne peut pas dépasser 200 caractères']
   },
   description: {
     type: String,
-    required: [true, 'La description est obligatoire'],
-    minlength: [20, 'La description doit contenir au moins 20 caractères'],
+    default: 'Signalement soumis par message vocal',
     maxlength: [1000, 'La description ne peut pas dépasser 1000 caractères']
   },
 
@@ -27,7 +26,7 @@ const schemaSignalement = new mongoose.Schema({
       values: ['routes', 'eclairage', 'dechets', 'eau', 'securite', 'inondation', 'autre'],
       message: 'Catégorie invalide'
     },
-    required: [true, 'La catégorie est obligatoire']
+    default: 'autre'
   },
   sousCategorie: { type: String, trim: true },
 

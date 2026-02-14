@@ -22,7 +22,17 @@ function masquerAnonyme(signalements, utilisateur) {
 // @route   POST /api/signalements
 // @acces   Privé (citoyen, agent, admin)
 const creerSignalement = asyncHandler(async (req, res) => {
-  const { titre, description, categorie, sousCategorie, estAnonyme } = req.body;
+  const { sousCategorie, estAnonyme } = req.body;
+  const estAudioSeul = req.files?.audio?.length > 0;
+
+  // Titre, description, catégorie : obligatoires sauf si audio
+  const titre = req.body.titre || (estAudioSeul ? 'Signalement vocal' : '');
+  const description = req.body.description || (estAudioSeul ? 'Signalement soumis par message vocal' : '');
+  const categorie = req.body.categorie || (estAudioSeul ? 'autre' : '');
+
+  if (!estAudioSeul && (!titre || !description || !categorie)) {
+    return envoyerReponse(res, 400, false, 'Titre, description et catégorie sont obligatoires.');
+  }
 
   // Parser localisation si envoyé en string (FormData multipart)
   let localisation = req.body.localisation;
@@ -30,8 +40,14 @@ const creerSignalement = asyncHandler(async (req, res) => {
     try { localisation = JSON.parse(localisation); } catch (e) { localisation = {}; }
   }
 
+  // La ville est obligatoire sauf si audio (on met une valeur par défaut)
   if (!localisation?.ville) {
-    return envoyerReponse(res, 400, false, 'La ville est obligatoire.');
+    if (estAudioSeul) {
+      if (!localisation) localisation = {};
+      localisation.ville = 'Non précisée';
+    } else {
+      return envoyerReponse(res, 400, false, 'La ville est obligatoire.');
+    }
   }
 
   // Calculer la priorité automatiquement
@@ -55,7 +71,7 @@ const creerSignalement = asyncHandler(async (req, res) => {
     historiqueStatuts: [{
       statut: 'recu',
       modifiePar: req.utilisateur._id,
-      commentaire: 'Signalement créé'
+      commentaire: estAudioSeul ? 'Signalement vocal créé' : 'Signalement créé'
     }]
   });
 

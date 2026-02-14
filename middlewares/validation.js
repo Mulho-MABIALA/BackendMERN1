@@ -29,12 +29,14 @@ const reglesConnexion = [
 ];
 
 // ===== Règles de validation : Signalement =====
+// Si un audio est uploadé, seule la localisation est obligatoire
+const aAudio = (value, { req }) => !(req.files?.audio?.length > 0);
+
 const reglesSignalement = [
-  body('titre').trim().notEmpty().withMessage('Le titre est obligatoire').isLength({ max: 200 }).withMessage('Max 200 caractères'),
-  body('description').trim().notEmpty().withMessage('La description est obligatoire').isLength({ min: 20 }).withMessage('Min 20 caractères'),
-  body('categorie').isIn(['routes', 'eclairage', 'dechets', 'eau', 'securite', 'inondation', 'autre']).withMessage('Catégorie invalide'),
-  // localisation.ville fonctionne en JSON, mais en FormData localisation est un string JSON
-  // On valide que localisation existe (le contrôleur parse le string et vérifie la ville)
+  body('titre').if(aAudio).trim().notEmpty().withMessage('Le titre est obligatoire').isLength({ max: 200 }).withMessage('Max 200 caractères'),
+  body('description').if(aAudio).trim().notEmpty().withMessage('La description est obligatoire').isLength({ min: 20 }).withMessage('Min 20 caractères'),
+  body('categorie').if(aAudio).isIn(['routes', 'eclairage', 'dechets', 'eau', 'securite', 'inondation', 'autre']).withMessage('Catégorie invalide'),
+  // localisation est toujours obligatoire (GPS)
   body('localisation').notEmpty().withMessage('La localisation est obligatoire')
 ];
 

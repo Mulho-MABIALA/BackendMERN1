@@ -41,6 +41,10 @@ const schemaVenteDechet = new mongoose.Schema({
 
   // Localisation pour récupération
   localisation: {
+    coordonnees: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number] }
+    },
     adresse: { type: String },
     quartier: { type: String },
     ville: { type: String, default: 'Dakar' }

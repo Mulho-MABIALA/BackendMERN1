@@ -1,6 +1,7 @@
 const express = require('express');
 const routeur = express.Router();
 const { proteger, autoriser } = require('../middlewares/auth');
+const upload = require('../middlewares/upload');
 const {
   creerVente,
   mesVentes,
@@ -21,7 +22,7 @@ routeur.get('/prix', obtenirPrix);
 routeur.use(proteger);
 
 // Routes citoyen
-routeur.post('/', creerVente);
+routeur.post('/', upload.array('photos', 5), creerVente);
 routeur.get('/mes-ventes', mesVentes);
 
 // Routes admin - statistiques (avant :id pour éviter conflit)
